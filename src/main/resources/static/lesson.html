@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .content-container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            text-align: center;
+            color: #00796b;
+        }
+
+        .form-label {
+            color: #333;
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 6px;
+            margin-bottom: 10px;
+        }
+
+        .btn-container button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-container button:hover {
+            opacity: 0.8;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: start;
+        }
+
+        .card-container .lesson-card {
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            width: calc(33.333% - 20px);
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card-container .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .card-container .lesson-card {
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div class="content-container">
+    <div class="form-container">
+        <h3>Manage Lessons</h3>
+        <form id="lessonForm">
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" id="lessonTitle" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Course ID</label>
+                <input type="text" id="courseId" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Course Name</label>
+                <select id="CourseName" class="form-control">
+                    <option value="">Select Course Name</option>
+                </select>
+            </div>
+            <input type="hidden" id="lessonId">
+            <div class="btn-container">
+                <button type="submit" class="btn btn-success">Save Lesson</button>
+                <button type="button" class="btn btn-danger" id="deleteLessonBtn">Delete Lesson</button>
+                <button type="button" class="btn btn-info" id="viewLessonsBtn">View Lessons</button>
+                <button type="button" class="btn btn-warning" id="clearFormBtn">Clear Form</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-container" id="lessonList">
+        <!-- Lessons will appear here -->
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let authToken = localStorage.getItem("authToken");
+
+    $(document).ready(function () {
+        loadCourseNames()
+
+        function loadCourseNames() {
+            $.ajax({
+                url: "http://localhost:8080/api/v1/course/getNames",
+                method: "GET",
+                dataType: "json",
+                headers: {"Authorization": `Bearer ${authToken}`},
+                success: (resp) => {
+                    console.log("API Response:", resp);
+                    if (!Array.isArray(resp.data)) {
+                        console.error("Error: Response data is not an array", resp);
+                        return;
+                    }
+
+                    let nameDropdown = $("#CourseName");
+                    nameDropdown.empty().append('<option value="">Select CourseName</option>');
+                    resp.data.forEach(name => {
+                        nameDropdown.append(`<option value="${name}">${name}</option>`);
+                    });
+                },
+                error: (err) => {
+                    console.error("Error loading credit bundles:", err);
+                }
+            });
+        }
+
+        $("#CourseName").change(function () {
+            let selectedCourse = $(this).val();
+            if (selectedCourse) {
+                $.ajax({
+                    url: `http://localhost:8080/api/v1/course/getCourseByName/${selectedCourse}`,
+                    method: "GET",
+                    dataType: "json",
+                    headers: {"Authorization": `Bearer ${authToken}`},
+                    success: function (resp) {
+                        console.log("Selected Course Data Response:", resp); // Debugging output
+
+                        if (resp && resp.data) {
+                            $("#courseId").val(resp.data); // Corrected ID selector
+                        } else {
+                            $("#courseId").val(""); // Clear input if no data found
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error fetching selected course details:", error);
+                    }
+                });
+            } else {
+                console.log("No course selected.");
+                $("#courseId").val("");
+            }
+        });
+
+        $(document).ready(function () {
+            // Load lessons on page load
+            viewLessons();
+
+            // Save or Update Lesson
+            $("#lessonForm").submit(function (event) {
+                event.preventDefault();
+
+                let lessonId = $("#lessonId").val().trim();
+                let lessonTitle = $("#lessonTitle").val().trim();
+                let courseId = $("#courseId").val().trim();
+
+                // Validate form fields
+                if (!lessonTitle || !courseId) {
+                    alert("Please enter all required fields!");
+                    return;
+                }
+
+                let requestData = {
+                    lessonId: lessonId,
+                    title: lessonTitle,
+                    courseId: courseId
+                };
+
+                let apiUrl = "http://localhost:8080/api/v1/lesson/save";
+                let methodType = "POST";
+
+                // If updating an existing lesson
+                if (lessonId) {
+                    apiUrl = `http://localhost:8080/api/v1/lesson/update/${lessonId}`;
+                    methodType = "PUT";
+                    requestData.lessonId = parseInt(lessonId);
+                }
+
+                $.ajax({
+                    url: apiUrl,
+                    type: methodType,
+                    contentType: "application/json",
+                    data: JSON.stringify(requestData),
+                    headers: {"Authorization": `Bearer ${authToken}`},
+                    success: function (response) {
+                        alert(lessonId ? "Lesson updated successfully!" : "Lesson saved successfully!");
+                        viewLessons();  // Refresh lesson list
+                        clearForm();
+                    },
+                    error: function (error) {
+                        alert("Failed to save/update lesson!");
+                    }
+                });
+            });
+
+            // View Lessons
+            $("#viewLessonsBtn").click(function () {
+                viewLessons();
+            });
+
+            // Delete Lesson
+            $("#deleteLessonBtn").click(function () {
+                let lessonId = $("#lessonId").val().trim();
+
+                if (!lessonId) {
+                    alert("Please select a lesson to delete.");
+                    return;
+                }
+
+                if (!confirm("Are you sure you want to delete this lesson?")) {
+                    return;
+                }
+
+                $.ajax({
+                    url: `http://localhost:8080/api/v1/lesson/delete/${lessonId}`,
+                    type: "DELETE",
+                    headers: {"Authorization": `Bearer ${authToken}`},
+                    success: function () {
+                        alert("Lesson deleted successfully!");
+                        clearForm();
+                        viewLessons();
+                    },
+                    error: function () {
+                        alert("Delete failed.");
+                    }
+                });
+            });
+
+            // View all lessons
+            function viewLessons() {
+                $.ajax({
+                    url: "http://localhost:8080/api/v1/lesson/getAll",
+                    type: "GET",
+                    headers: {"Authorization": `Bearer ${authToken}`},
+                    success: function (response) {
+                        $("#lessonList").empty();
+
+                        if (!Array.isArray(response.data)) {
+                            console.error("Unexpected response format:", response);
+                            alert("Error fetching lessons.");
+                            return;
+                        }
+
+                        response.data.forEach(lesson => {
+                            const lessonCard = `
+                            <div class="lesson-card" data-lesson-id="${lesson.lessonId}" data-title="${lesson.title}" data-course-id="${lesson.courseId}">
+                                <h5>${lesson.title}</h5>
+                                <p>Course ID: ${lesson.courseId}</p>
+                                <p>Last Updated: ${new Date(lesson.updateAt).toLocaleString()}</p>
+                            </div>
+                        `;
+                            $("#lessonList").append(lessonCard);
+                        });
+                    },
+                    error: function () {
+                        alert("Failed to fetch lessons.");
+                    }
+                });
+            }
+
+            // Fill form with lesson data when clicking on a lesson
+            $("#lessonList").on("click", ".lesson-card", function () {
+                const lessonId = $(this).data("lesson-id");
+                fillForm(
+                    lessonId,
+                    $(this).data("title"),
+                    $(this).data("course-id")
+                );
+            });
+
+            // Fill form with lesson details
+            function fillForm(lessonId, title, courseId) {
+                $("#lessonId").val(lessonId);
+                $("#lessonTitle").val(title);
+                $("#courseId").val(courseId);
+            }
+
+            // Clear form
+            $("#clearFormBtn").click(function () {
+                clearForm();
+            });
+
+            function clearForm() {
+                $("#lessonTitle").val("");
+                $("#courseId").val("");
+                $("#lessonId").val("");
+            }
+        });
+    });
+</script>
+</body>
+</html>
