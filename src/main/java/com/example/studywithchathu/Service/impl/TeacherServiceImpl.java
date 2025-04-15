@@ -4,13 +4,13 @@ import com.example.studywithchathu.Dto.TeacherDTO;
 import com.example.studywithchathu.Entity.Teacher;
 import com.example.studywithchathu.Repo.TeacherRepository;
 import com.example.studywithchathu.Service.TeacherService;
-import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TeacherServiceImpl implements TeacherService {
@@ -21,47 +21,54 @@ public class TeacherServiceImpl implements TeacherService {
     @Autowired
     private ModelMapper modelMapper;
 
-    @Transactional
     @Override
     public void saveTeacher(TeacherDTO teacherDTO) {
-        if (teacherRepo.existsById(Integer.valueOf(teacherDTO.getTeacherId()))) {
-            throw new RuntimeException("Teacher already exists!");
-        }
-        teacherRepo.save(modelMapper.map(teacherDTO, Teacher.class));
-    }
-
-    @Override
-    public List<String> getAllTeacherNames() {
-        return teacherRepo.findAllTeacherNames();
-    }
-
-    @Override
-    public Integer getTeacherIdByName(String name) {
-        return teacherRepo.findTeacherByName(name);
-    }
-
-    @Override
-    public List<TeacherDTO> getAllTeachers() {
-        return modelMapper.map(teacherRepo.findByIsDeletedFalse(),
-                new TypeToken<List<TeacherDTO>>() {}.getType());
+        Teacher teacher = modelMapper.map(teacherDTO, Teacher.class);
+        teacher.setDeleted(false);
+        teacherRepo.save(teacher);
     }
 
     @Override
     public void updateTeacher(TeacherDTO teacherDTO) {
-        if (!teacherRepo.existsById(Integer.valueOf(teacherDTO.getTeacherId()))) {
-            throw new RuntimeException("Teacher does not exist!");
+        Optional<Teacher> optionalTeacher = teacherRepo.findById(Integer.valueOf(teacherDTO.getTeacherId()));
+        if (optionalTeacher.isPresent()) {
+            Teacher teacher = modelMapper.map(teacherDTO, Teacher.class);
+            teacherRepo.save(teacher);
+        } else {
+            throw new RuntimeException("Teacher not found with ID: " + teacherDTO.getTeacherId());
         }
-
-        Teacher teacher = modelMapper.map(teacherDTO, Teacher.class);
-        teacherRepo.save(teacher);
     }
 
     @Override
     public void deleteTeacher(int id) {
-        Teacher teacher = teacherRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+        Optional<Teacher> optionalTeacher = teacherRepo.findById(id);
+        if (optionalTeacher.isPresent()) {
+            Teacher teacher = optionalTeacher.get();
+            teacher.setDeleted(true); // soft delete
+            teacherRepo.save(teacher);
+        } else {
+            throw new RuntimeException("Teacher not found with ID: " + id);
+        }
+    }
 
-        teacher.setDeleted(true); // Soft delete
-        teacherRepo.save(teacher);
+    @Override
+    public List<TeacherDTO> getAllTeachers() {
+        return teacherRepo.findByIsDeletedFalse()
+                .stream()
+                .map(teacher -> modelMapper.map(teacher, TeacherDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getAllTeacherNames() {
+        return teacherRepo.findByIsDeletedFalse()
+                .stream()
+                .map(Teacher::getName)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer getTeacherIdByName (String name) {
+        return teacherRepo.findTeacherByName(name);
     }
 }

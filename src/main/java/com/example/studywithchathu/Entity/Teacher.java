@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
 @AllArgsConstructor
@@ -17,13 +17,14 @@ public class Teacher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int teacherId;
 
-    private String name;
     private String email;
+    private Date joinDate;
+    private String name;
     private String phoneNumber;
-    private LocalDate joinDate;
     private boolean isDeleted = false;
+
+
     @ManyToOne
     @JoinColumn(name = "courseId", nullable = false)
     private Course course;
-
 }

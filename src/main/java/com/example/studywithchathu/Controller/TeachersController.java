@@ -1,6 +1,8 @@
 package com.example.studywithchathu.Controller;
 
+
 import com.example.studywithchathu.Dto.TeacherDTO;
+import com.example.studywithchathu.Service.TeacherService;
 import com.example.studywithchathu.Util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,11 +12,11 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/v1/teacher")
-public class TeacherController {
+@RequestMapping("api/v1/teacher")
+public class TeachersController {
 
     @Autowired
-    private com.example.studywithchathu.Service.TeacherService teacherService;
+    private TeacherService teacherService;
 
     @PostMapping("/save")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -58,4 +60,5 @@ public class TeacherController {
         teacherService.deleteTeacher(id);
         return new ResponseUtil(200, "Teacher deleted successfully (soft delete)", null);
     }
+
 }

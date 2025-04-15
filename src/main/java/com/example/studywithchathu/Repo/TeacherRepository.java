@@ -6,12 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface TeacherRepository extends JpaRepository<Teacher, Integer> {
-
-    @Query("SELECT t.name FROM Teacher t")
+public interface TeacherRepository extends JpaRepository<Teacher ,Integer> {
+    @Query("SELECT l.name FROM Teacher l")
     List<String> findAllTeacherNames();
 
-    @Query("SELECT t.teacherId FROM Teacher t WHERE t.name =:name")
+    @Query("SELECT l.teacherId FROM Teacher l WHERE l.name =:name")
     Integer findTeacherByName(String name);
 
     List<Teacher> findByIsDeletedFalse();
