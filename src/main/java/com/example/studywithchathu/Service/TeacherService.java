@@ -16,6 +16,4 @@ public interface TeacherService {
     List<String> getAllTeacherNames();
 
     Integer getTeacherIdByName(String name);
-
-
 }

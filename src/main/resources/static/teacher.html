@@ -105,9 +105,13 @@
                 <input type="date" id="teacherJoinDate" class="form-control" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Course</label>
-                <select id="teacherCourse" class="form-control" required>
-                    <option value="">Select Course</option>
+                <label class="form-label">Course ID</label>
+                <input type="text" id="courseId" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Course Name</label>
+                <select id="CourseName" class="form-control">
+                    <option value="">Select Course Name</option>
                 </select>
             </div>
             <input type="hidden" id="teacherId">
@@ -126,39 +130,51 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
     let authToken = localStorage.getItem("authToken");
 
     $(document).ready(function () {
         loadCourseNames();
+        viewTeachers();
 
         function loadCourseNames() {
             $.ajax({
                 url: "http://localhost:8080/api/v1/course/getNames",
                 method: "GET",
-                dataType: "json",
-                headers: {"Authorization": `Bearer ${authToken}`},
-                success: function (resp) {
-                    if (!Array.isArray(resp.data)) {
-                        console.error("Error: Response data is not an array", resp);
-                        return;
-                    }
-
-                    let nameDropdown = $("#teacherCourse");
-                    nameDropdown.empty().append('<option value="">Select Course</option>');
+                headers: { "Authorization": `Bearer ${authToken}` },
+                success: (resp) => {
+                    let dropdown = $("#CourseName");
+                    dropdown.empty().append('<option value="">Select CourseName</option>');
                     resp.data.forEach(name => {
-                        nameDropdown.append(`<option value="${name}">${name}</option>`);
+                        dropdown.append(`<option value="${name}">${name}</option>`);
                     });
                 },
-                error: function (err) {
-                    console.error("Error loading courses:", err);
+                error: (err) => {
+                    console.error("Error loading courses", err);
                 }
             });
         }
 
-        // Save or Update Teacher
+        $("#CourseName").change(function () {
+            let selected = $(this).val();
+            if (selected) {
+                $.ajax({
+                    url: `http://localhost:8080/api/v1/course/getCourseByName/${selected}`,
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${authToken}` },
+                    success: function (resp) {
+                        $("#courseId").val(resp.data);
+                    },
+                    error: function (err) {
+                        console.error("Error fetching course ID", err);
+                        $("#courseId").val('');
+                    }
+                });
+            } else {
+                $("#courseId").val('');
+            }
+        });
+
         $("#teacherForm").submit(function (event) {
             event.preventDefault();
 
@@ -166,74 +182,56 @@
             let teacherName = $("#teacherName").val().trim();
             let teacherEmail = $("#teacherEmail").val().trim();
             let teacherPhone = $("#teacherPhone").val().trim();
-            let joinDate = $("#teacherJoinDate").val().trim();
-            let courseId = $("#teacherCourse").val().trim();
+            let teacherJoinDate = $("#teacherJoinDate").val().trim();
+            let teacherCourseId = $("#courseId").val().trim(); // 🔧 Fixed this line
 
-            // Validate form fields
-            if (!teacherName || !teacherEmail || !teacherPhone || !joinDate || !courseId) {
-                alert("Please enter all required fields!");
+            if (!teacherName || !teacherEmail || !teacherPhone || !teacherJoinDate ||  !teacherCourseId) {
+                alert("Please fill in all fields!");
                 return;
             }
 
-            let requestData = {
-                teacherId: teacherId,
+            let data = {
+                teacherId: teacherId ? parseInt(teacherId) : null,
                 name: teacherName,
                 email: teacherEmail,
                 phoneNumber: teacherPhone,
-                joinDate: joinDate,
-                courseId: courseId
+                joinDate: teacherJoinDate,
+                courseId: teacherCourseId
             };
 
-            let apiUrl = "http://localhost:8080/api/v1/teacher/save";
-            let methodType = "POST";
-
-            // If updating an existing teacher
-            if (teacherId) {
-                apiUrl = `http://localhost:8080/api/v1/teacher/update/${teacherId}`;
-                methodType = "PUT";
-            }
+            let apiUrl = teacherId
+                ? `http://localhost:8080/api/v1/teacher/update/${teacherId}`
+                : "http://localhost:8080/api/v1/teacher/save";
+            let method = teacherId ? "PUT" : "POST";
 
             $.ajax({
                 url: apiUrl,
-                type: methodType,
+                type: method,
                 contentType: "application/json",
-                data: JSON.stringify(requestData),
-                headers: {"Authorization": `Bearer ${authToken}`},
-                success: function (response) {
-                    alert(teacherId ? "Teacher updated successfully!" : "Teacher saved successfully!");
-                    viewTeachers();  // Refresh teacher list
+                data: JSON.stringify(data),
+                headers: { "Authorization": `Bearer ${authToken}` },
+                success: function () {
+                    alert(teacherId ? "Updated successfully!" : "Saved successfully!");
+                    viewTeachers();
                     clearForm();
                 },
                 error: function () {
-                    alert("Failed to save/update teacher!");
+                    alert("Save/Update failed.");
                 }
             });
         });
 
-        // View Teachers
-        $("#viewTeachersBtn").click(function () {
-            viewTeachers();
-        });
-
-        // Delete Teacher
         $("#deleteTeacherBtn").click(function () {
-            let teacherId = $("#teacherId").val().trim();
-
-            if (!teacherId) {
-                alert("Please select a teacher to delete.");
-                return;
-            }
-
-            if (!confirm("Are you sure you want to delete this teacher?")) {
-                return;
-            }
+            let id = $("#teacherId").val().trim();
+            if (!id) return alert("Select a teacher first!");
+            if (!confirm("Are you sure?")) return;
 
             $.ajax({
-                url: `http://localhost:8080/api/v1/teacher/delete/${teacherId}`,
+                url: `http://localhost:8080/api/v1/teacher/delete/${id}`,
                 type: "DELETE",
-                headers: {"Authorization": `Bearer ${authToken}`},
+                headers: { "Authorization": `Bearer ${authToken}` },
                 success: function () {
-                    alert("Teacher deleted successfully!");
+                    alert("Deleted successfully!");
                     clearForm();
                     viewTeachers();
                 },
@@ -243,32 +241,24 @@
             });
         });
 
-        // View all teachers
+        $("#viewTeachersBtn").click(viewTeachers);
+
         function viewTeachers() {
             $.ajax({
                 url: "http://localhost:8080/api/v1/teacher/getAll",
                 type: "GET",
-                headers: {"Authorization": `Bearer ${authToken}`},
-                success: function (response) {
-                    $("#teacherList").empty();
-
-                    if (!Array.isArray(response.data)) {
-                        console.error("Unexpected response format:", response);
-                        alert("Error fetching teachers.");
-                        return;
-                    }
-
-                    response.data.forEach(teacher => {
-                        const teacherCard = `
-                            <div class="teacher-card" data-teacher-id="${teacher.teacherId}" data-name="${teacher.name}" data-email="${teacher.email}" data-phone="${teacher.phoneNumber}" data-course-id="${teacher.courseId}" data-join-date="${teacher.joinDate}">
+                headers: { "Authorization": `Bearer ${authToken}` },
+                success: function (res) {
+                    let list = $("#teacherList").empty();
+                    res.data.forEach(teacher => {
+                        list.append(`
+                            <div class="teacher-card" data-teacher-id="${teacher.teacherId}" data-name="${teacher.name}" data-email="${teacher.email}">
                                 <h5>${teacher.name}</h5>
                                 <p>Email: ${teacher.email}</p>
                                 <p>Phone: ${teacher.phoneNumber}</p>
-                                <p>Course ID: ${teacher.courseId}</p>
-                                <p>Join Date: ${teacher.joinDate}</p>
+                                <p>Join Date: ${new Date(teacher.joinDate).toLocaleDateString()}</p>
                             </div>
-                        `;
-                        $("#teacherList").append(teacherCard);
+                        `);
                     });
                 },
                 error: function () {
@@ -277,42 +267,17 @@
             });
         }
 
-        // Fill form with teacher data when clicking on a teacher
         $("#teacherList").on("click", ".teacher-card", function () {
-            const teacherId = $(this).data("teacher-id");
-            fillForm(
-                teacherId,
-                $(this).data("name"),
-                $(this).data("email"),
-                $(this).data("phone"),
-                $(this).data("course-id"),
-                $(this).data("join-date")
-            );
+            $("#teacherId").val($(this).data("teacher-id"));
+            $("#teacherName").val($(this).data("name"));
+            $("#teacherEmail").val($(this).data("email"));
         });
 
-        // Fill form with teacher details
-        function fillForm(teacherId, name, email, phone, courseId, joinDate) {
-            $("#teacherId").val(teacherId);
-            $("#teacherName").val(name);
-            $("#teacherEmail").val(email);
-            $("#teacherPhone").val(phone);
-            $("#teacherCourse").val(courseId);
-            $("#teacherJoinDate").val(joinDate);
-        }
-
-        // Clear form
-        $("#clearFormBtn").click(function () {
-            clearForm();
-        });
+        $("#clearFormBtn").click(clearForm);
 
         function clearForm() {
-            $("#teacherName").val("");
-            $("#teacherEmail").val("");
-            $("#teacherPhone").val("");
-            $("#teacherCourse").val("");
-            $("#teacherJoinDate").val("");
-
-
+            $("#teacherForm")[0].reset();
+            $("#teacherId").val('');
         }
     });
 </script>

@@ -68,7 +68,12 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
-    public Integer getTeacherIdByName (String name) {
-        return teacherRepo.findTeacherByName(name);
+    public Integer getTeacherIdByName(String name) {
+        Teacher teacher = teacherRepo.findByNameAndIsDeletedFalse(name);
+        if (teacher != null) {
+            return teacher.getTeacherId();
+        } else {
+            throw new RuntimeException("Teacher not found with name: " + name);
+        }
     }
 }
