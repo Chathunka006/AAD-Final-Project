@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Card Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: lightblue;
+        }
+
+        .payment-form {
+            max-width: 500px;
+            margin: 50px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-form h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #0d6efd;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #0d6efd;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #084fc0;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-form">
+    <h3>Payment</h3>
+    <form id="cardPaymentForm">
+        <div class="mb-3">
+            <label for="cardName" class="form-label">Name on Card</label>
+            <input type="text" class="form-control" id="cardName" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="cardNumber" class="form-label">Card Number</label>
+            <input type="text" class="form-control" id="cardNumber" maxlength="16" required>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <label for="expiry" class="form-label">Expiry Date</label>
+                <input type="text" class="form-control" id="expiry" placeholder="MM/YY" required>
+            </div>
+            <div class="col">
+                <label for="cvv" class="form-label">CVV</label>
+                <input type="password" class="form-control" id="cvv" maxlength="4" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Pay Now</button>
+    </form>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <p>Payment Successful! A confirmation bill has been sent to your email.</p>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $('#cardPaymentForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const cardName = $('#cardName').val();
+        const email = $('#email').val();
+        const cardNumber = $('#cardNumber').val();
+        const expiry = $('#expiry').val();
+        const cvv = $('#cvv').val();
+
+        // Redirect to success page
+        window.location.href = 'paymentSuccessful.html';
+
+        // Optional: Send data to backend
+        /*
+        $.post("/api/payment", {
+            cardName: cardName,
+            email: email,
+            cardNumber: cardNumber,
+            expiry: expiry,
+            cvv: cvv
+        }, function(response) {
+            window.location.href = 'paymentSuccessful.html';
+        });
+        */
+    });
+</script>
+
+
+</body>
+</html>
