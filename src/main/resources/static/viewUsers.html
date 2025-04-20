@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Users</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 40px;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .user-card h5 {
+            margin: 0 0 10px;
+            font-weight: bold;
+        }
+
+        .user-card p {
+            margin: 5px 0;
+        }
+
+        .delete-user-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>All Registered Users</h2>
+    <div id="userList"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const authToken = localStorage.getItem("authToken");
+
+    $(document).ready(function () {
+        fetchUsers();
+
+        function fetchUsers() {
+            $.ajax({
+                url: "http://localhost:8080/api/v1/user/getAll",
+                type: "POST",
+                headers: { "Authorization": `Bearer ${authToken}` },
+                success: function (res) {
+                    let users = res.data;
+                    let userList = $("#userList");
+                    userList.empty();
+
+                    // Filter out admin users
+                    let nonAdminUsers = users.filter(user => user.role.toLowerCase() !== 'admin');
+
+                    if (nonAdminUsers.length === 0) {
+                        userList.append("<p class='text-center'>No users to display.</p>");
+                        return;
+                    }
+
+                    nonAdminUsers.forEach(user => {
+                        userList.append(`
+                    <div class="user-card" data-email="${user.email}">
+                        <h5>${user.name}</h5>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Role:</strong> ${user.role}</p>
+                        <button class="btn btn-danger btn-sm delete-user-btn">Delete</button>
+                    </div>
+                `);
+                    });
+                },
+                error: function () {
+                    alert("Failed to fetch users.");
+                }
+            });
+        }
+
+
+        $("#userList").on("click", ".delete-user-btn", function () {
+            let card = $(this).closest(".user-card");
+            let email = card.data("email");
+
+            if (confirm(`Are you sure you want to delete user: ${email}?`)) {
+                $.ajax({
+                    url: `http://localhost:8080/api/v1/user/deleteUser/${email}`,
+                    type: "DELETE",
+                    headers: { "Authorization": `Bearer ${authToken}` },
+                    success: function (res) {
+                        alert(res.message || "User deleted");
+                        fetchUsers();
+                    },
+                    error: function () {
+                        alert("Failed to delete user.");
+                    }
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

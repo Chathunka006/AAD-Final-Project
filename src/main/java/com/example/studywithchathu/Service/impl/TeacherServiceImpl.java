@@ -55,7 +55,12 @@ public class TeacherServiceImpl implements TeacherService {
     public List<TeacherDTO> getAllTeachers() {
         return teacherRepo.findByIsDeletedFalse()
                 .stream()
-                .map(teacher -> modelMapper.map(teacher, TeacherDTO.class))
+                .map(teacher -> {
+                    TeacherDTO dto = modelMapper.map(teacher, TeacherDTO.class);
+                    // Set the course name manually
+                    dto.setTitle(teacher.getCourse().getTitle());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

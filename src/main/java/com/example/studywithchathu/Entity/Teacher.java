@@ -26,4 +26,6 @@ public class Teacher {
     @ManyToOne
     @JoinColumn(name = "courseId", nullable = false)
     private Course course;
+
+
 }

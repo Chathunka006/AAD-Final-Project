@@ -14,5 +14,6 @@ public class TeacherDTO {
     private String phoneNumber;
     private String joinDate;
     private int courseId;
+    private String title;
 
 }

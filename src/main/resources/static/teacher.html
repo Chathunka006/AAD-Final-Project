@@ -183,9 +183,9 @@
             let teacherEmail = $("#teacherEmail").val().trim();
             let teacherPhone = $("#teacherPhone").val().trim();
             let teacherJoinDate = $("#teacherJoinDate").val().trim();
-            let teacherCourseId = $("#courseId").val().trim(); // 🔧 Fixed this line
+            let teacherCourseId = $("#courseId").val().trim();
 
-            if (!teacherName || !teacherEmail || !teacherPhone || !teacherJoinDate ||  !teacherCourseId) {
+            if (!teacherName || !teacherEmail || !teacherPhone || !teacherJoinDate || !teacherCourseId) {
                 alert("Please fill in all fields!");
                 return;
             }
@@ -252,7 +252,14 @@
                     let list = $("#teacherList").empty();
                     res.data.forEach(teacher => {
                         list.append(`
-                            <div class="teacher-card" data-teacher-id="${teacher.teacherId}" data-name="${teacher.name}" data-email="${teacher.email}">
+                            <div class="teacher-card"
+                                 data-teacher-id="${teacher.teacherId}"
+                                 data-name="${teacher.name}"
+                                 data-email="${teacher.email}"
+                                 data-phone="${teacher.phoneNumber}"
+                                 data-join-date="${teacher.joinDate}"
+                                 data-course-id="${teacher.courseId}"
+                                 data-course-name="${teacher.title}">
                                 <h5>${teacher.name}</h5>
                                 <p>Email: ${teacher.email}</p>
                                 <p>Phone: ${teacher.phoneNumber}</p>
@@ -271,6 +278,10 @@
             $("#teacherId").val($(this).data("teacher-id"));
             $("#teacherName").val($(this).data("name"));
             $("#teacherEmail").val($(this).data("email"));
+            $("#teacherPhone").val($(this).data("phone"));
+            $("#teacherJoinDate").val($(this).data("join-date"));
+            $("#courseId").val($(this).data("course-id"));
+            $("#title").val($(this).data("course-name")); // Select course in dropdown
         });
 
         $("#clearFormBtn").click(clearForm);
@@ -281,5 +292,6 @@
         }
     });
 </script>
+
 </body>
 </html>
