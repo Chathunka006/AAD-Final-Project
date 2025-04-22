@@ -12,6 +12,8 @@ public interface CourseService {
 
     List<String> getAllCourseNames();
 
+    CourseDTO getCourseById(int id);
+
     Integer getCourseIdByName(String name);
 
     List<CourseDTO> getAllCourses();

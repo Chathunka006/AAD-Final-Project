@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("api/v1/course")
@@ -30,6 +31,13 @@ public class CourseController {
     public ResponseUtil getAllCourses() {
         List<CourseDTO> courses = courseService.getAllCourses();
         return new ResponseUtil(200, "All courses retrieved", courses);
+    }
+
+    @GetMapping("/getCourseById/{id}")
+    public ResponseUtil getCourseById(@PathVariable int id) {
+        CourseDTO courses = courseService.getCourseById(id);
+        System.out.println(courses);
+        return new ResponseUtil(200, "Course found", courses);
     }
 
     @GetMapping("/getNames")

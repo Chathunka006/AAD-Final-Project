@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -16,13 +17,8 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int paymentId;
-
-    private String userId;
-
-    @ManyToOne
-    @JoinColumn(name = "courseId", nullable = false)
-    private Course course;
-
+    private UUID userId;
+    private int courseId;
     private int amount;
     private Date paymentDate;
 }

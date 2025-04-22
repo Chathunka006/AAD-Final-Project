@@ -36,6 +36,11 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public CourseDTO getCourseById(int id) {
+        return modelMapper.map(courseRepo.findById(id), CourseDTO.class);
+    }
+
+    @Override
     public Integer getCourseIdByName(String name) {
         return courseRepo.findCourseByName(name);
     }

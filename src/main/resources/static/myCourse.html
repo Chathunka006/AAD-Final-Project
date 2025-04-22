@@ -52,7 +52,6 @@
             transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             padding: 25px;
             height: 100%;
-
         }
 
         .course-card:hover {
@@ -75,7 +74,7 @@
 
         .join-btn {
             margin-top: 20px;
-            background-color: #e40046;
+            background-color: #28a745; /* Green color */
             color: #fff;
             border: none;
             border-radius: 30px;
@@ -85,7 +84,7 @@
         }
 
         .join-btn:hover {
-            background-color: #c2003d;
+            background-color: #218838; /* Darker green on hover */
         }
     </style>
 </head>
@@ -96,7 +95,7 @@
     <div class="container">
         <div class="title-wrapper">
             <h2>My Courses</h2>
-            <p>Select a course and join today!</p>
+            <p>Select a course and view the details!</p>
         </div>
 
         <div class="row" id="courseContainer">
@@ -107,11 +106,16 @@
 
 <script>
     $(document).ready(function () {
+
+        let id  = "d5e1aa69-d851-4809-aec0-49fde2a89298";
+
         $.ajax({
-            url: "http://localhost:8080/api/v1/course/getAll", // Your backend endpoint
+            url: `http://localhost:8080/api/v1/studentcourse/getStudentCourse/${id}`, // Your backend endpoint
             type: "GET",
             success: function (response) {
                 $("#courseContainer").empty();
+
+                console.log(response)
 
                 response.data.forEach(course => {
                     $("#courseContainer").append(`
@@ -124,7 +128,7 @@
                                     <p><strong>Price:</strong> Rs. ${course.price}</p>
                                     <p><strong>Start Date:</strong> ${course.startDate}</p>
                                 </div>
-                                <button class="join-btn" onclick="joinCourse(${course.courseId})">Join Course</button>
+                                <button class="join-btn" onclick="joinCourse(${course.courseId})">View</button>
                             </div>
                         </div>
                     `);

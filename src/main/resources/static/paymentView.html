@@ -69,6 +69,8 @@
             type: "GET",
             headers: { "Authorization": `Bearer ${authToken}` },
             success: function (res) {
+
+                console.log(res)
                 let payments = res.data || [];
                 let totalIncome = 0;
                 let totalExpenses = 0;
@@ -84,16 +86,18 @@
 
                     $("#paymentList").append(`
                         <div class="payment-card">
-                            <h5>${payment.userName}</h5>
-                            <p><strong>Type:</strong> ${payment.type}</p>
+                            <h5>Payment Number : ${payment.paymentId}</h5>
+                            <p><strong>Course ID:</strong> ${payment.courseId}</p>
+                             <p><strong>User ID:</strong> ${payment.userId}</p>
                             <p><strong>Amount:</strong> Rs. ${payment.amount}</p>
-                            <p><strong>Date:</strong> ${new Date(payment.date).toLocaleDateString()}</p>
+                            <p><strong>Date:</strong> ${new Date(payment.paymentDate).toLocaleDateString()}</p>
                         </div>
                     `);
                 });
 
-                $("#totalIncome").text(totalIncome.toFixed(2));
-                $("#totalExpenses").text(totalExpenses.toFixed(2));
+
+                $("#totalIncome").text(totalExpenses.toFixed(2));
+                $("#totalExpenses").text(totalIncome.toFixed(2));
             },
             error: function () {
                 alert("Error loading payments");

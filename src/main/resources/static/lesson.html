@@ -164,7 +164,7 @@
                         console.log("Selected Course Data Response:", resp); // Debugging output
 
                         if (resp && resp.data) {
-                            $("#courseId").val(resp.data); // Corrected ID selector
+                            $("#CourseName").val(resp.data); // Corrected ID selector
                         } else {
                             $("#courseId").val(""); // Clear input if no data found
                         }
@@ -298,10 +298,11 @@
             // Fill form with lesson data when clicking on a lesson
             $("#lessonList").on("click", ".lesson-card", function () {
                 const lessonId = $(this).data("lesson-id");
+                console.log($(this).data("course-id"))
                 fillForm(
                     lessonId,
                     $(this).data("title"),
-                    $(this).data("course-id")
+                    $(this).data("course-id"),
                 );
             });
 
@@ -310,6 +311,17 @@
                 $("#lessonId").val(lessonId);
                 $("#lessonTitle").val(title);
                 $("#courseId").val(courseId);
+                $("#CourseName").val(courseId);
+
+                $.ajax({
+                    url: `http://localhost:8080/api/v1/course/getCourseById/${courseId}`,
+                    method: 'GET',
+                    success: function (data) {
+                        // Once course data is received, use it in the POST request
+                        console.log(data)
+                        $("#CourseName").val(data.data.title);
+                    }
+                })
             }
 
             // Clear form

@@ -88,12 +88,14 @@
 
 <script>
     $('#joinCourseForm').on('submit', function (e) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get("courseId");
         e.preventDefault(); // Prevent default form submission
 
         // Here, you can perform validation or other actions before redirecting
 
         // Redirect to payment page
-        window.location.href = 'payment.html';
+        window.location.href = `payment.html?courseId=${courseId}`;
     });
 </script>
 
